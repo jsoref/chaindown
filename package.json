@@ -14,6 +14,7 @@
   },
   "scripts": {
     "dev": "tsdx watch",
+    "format": "prettier --write '**/*.{json,ts}' ",
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
@@ -27,12 +28,7 @@
       "pre-commit": "tsdx lint"
     }
   },
-  "prettier": {
-    "printWidth": 80,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "es5"
-  },
+  "prettier": "@prisma-labs/prettier-config",
   "module": "dist/chaindown.esm.js",
   "size-limit": [
     {
@@ -45,8 +41,10 @@
     }
   ],
   "devDependencies": {
+    "@prisma-labs/prettier-config": "^0.1.0",
     "@size-limit/preset-small-lib": "^4.9.0",
     "@types/lodash": "^4.14.165",
+    "dripip": "^0.10.0",
     "husky": "^4.3.0",
     "size-limit": "^4.9.0",
     "tsdx": "^0.14.1",

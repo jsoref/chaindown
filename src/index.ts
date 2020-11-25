@@ -1,5 +1,5 @@
-import * as lo from 'lodash';
-import { ArrayOrVarg, MaybeArray } from './utils';
+import * as lo from 'lodash'
+import { ArrayOrVarg, MaybeArray } from './utils'
 
 /**
  * Create a markdown section. A section is a title following by content.
@@ -7,39 +7,37 @@ import { ArrayOrVarg, MaybeArray } from './utils';
 export function section(title: Node): SmartNode {
   const data: { title: Node; nodes: Node[] } = {
     title,
-    nodes: [],
-  };
+    nodes: []
+  }
   const me: SmartNode = {
     add(...sections) {
-      data.nodes.push(...lo.flatten(sections));
-      return me;
+      data.nodes.push(...lo.flatten(sections))
+      return me
     },
     render(state) {
       return render(
         state,
         lines(
           render(state, heading(state.level, data.title)),
-          ...lo.flatMap(data.nodes, content =>
-            renderN({ ...state, level: state.level + 1 }, content)
-          )
+          ...lo.flatMap(data.nodes, content => renderN({ ...state, level: state.level + 1 }, content))
         )
-      );
-    },
-  };
-  return me;
+      )
+    }
+  }
+  return me
 }
 
 /**
  * Text inside a code block.
  */
 export function codeBlock(languageType: string, content: Node): Renderable {
-  return lines(join('```', languageType), content, '```');
+  return lines(join('```', languageType), content, '```')
 }
 
 /**
  * Text inside a TypeScript code block.
  */
-export const tsCodeBlock = codeBlock.bind(null, 'ts');
+export const tsCodeBlock = codeBlock.bind(null, 'ts')
 
 /**
  * Text styled as code.
@@ -47,9 +45,9 @@ export const tsCodeBlock = codeBlock.bind(null, 'ts');
 export function codeSpan(n: Node): Renderable {
   return {
     render(state) {
-      return join('`', render(state, n), '`');
-    },
-  };
+      return join('`', render(state, n), '`')
+    }
+  }
 }
 
 /**
@@ -58,24 +56,24 @@ export function codeSpan(n: Node): Renderable {
 export function link(text: Node, url: string): Renderable {
   return {
     render(state) {
-      return `[${render(state, text)}](${url})`;
-    },
-  };
+      return `[${render(state, text)}](${url})`
+    }
+  }
 }
 
 /**
  * A heading.
  */
 export function heading(n: number, content: Node): Renderable {
-  let i = 0;
-  let s = '';
+  let i = 0
+  let s = ''
 
   while (i < n) {
-    s += '#';
-    i++;
+    s += '#'
+    i++
   }
 
-  return span(s, content);
+  return span(s, content)
 }
 
 /**
@@ -83,20 +81,20 @@ export function heading(n: number, content: Node): Renderable {
  */
 export function lines(...nodes: ArrayOrVarg<Node>): SmartNode {
   const data = {
-    nodes: lo.flatten(nodes),
-  };
+    nodes: lo.flatten(nodes)
+  }
 
   const me: SmartNode = {
     add(...nodes) {
-      data.nodes.push(...lo.flatten(nodes));
-      return me;
+      data.nodes.push(...lo.flatten(nodes))
+      return me
     },
     render(state) {
-      return lo.flatMap(data.nodes, n => renderN(state, n)).join('\n');
-    },
-  };
+      return lo.flatMap(data.nodes, n => renderN(state, n)).join('\n')
+    }
+  }
 
-  return me;
+  return me
 }
 
 /**
@@ -104,55 +102,55 @@ export function lines(...nodes: ArrayOrVarg<Node>): SmartNode {
  */
 export function span(...nodes: ArrayOrVarg<Node>): SmartNode {
   const data = {
-    nodes: lo.flatten(nodes),
-  };
+    nodes: lo.flatten(nodes)
+  }
 
   const me: SmartNode = {
     add(...nodes) {
-      data.nodes.push(...lo.flatten(nodes));
-      return me;
+      data.nodes.push(...lo.flatten(nodes))
+      return me
     },
     render(state) {
-      return lo.flatMap(data.nodes, n => renderN(state, n)).join(' ');
-    },
-  };
+      return lo.flatMap(data.nodes, n => renderN(state, n)).join(' ')
+    }
+  }
 
-  return me;
+  return me
 }
 
 /**
  * Prettier ignore pragma constant.
  */
-export const PRETTIER_IGNORE = '<!-- prettier-ignore -->';
+export const PRETTIER_IGNORE = '<!-- prettier-ignore -->'
 
 //
 // Internal Utilities
 //
 
 function renderN(state: RenderState, r: Node): MaybeArray<string> {
-  return typeof r === 'string' ? r : r.render(state);
+  return typeof r === 'string' ? r : r.render(state)
 }
 
 export function render(state: RenderState, n: Node): string {
-  return lo.flatten(renderN(state, n)).join('');
+  return lo.flatten(renderN(state, n)).join('')
 }
 
 interface RenderState {
-  level: number;
+  level: number
 }
 
 interface Renderable {
-  render(state: RenderState): MaybeArray<string>;
+  render(state: RenderState): MaybeArray<string>
 }
 
 interface Appendable {
-  add(...nodes: ArrayOrVarg<Node>): Node;
+  add(...nodes: ArrayOrVarg<Node>): Node
 }
 
 export interface SmartNode extends Renderable, Appendable {}
 
-export type Node = Renderable | string;
+export type Node = Renderable | string
 
 function join(...strings: string[]): string {
-  return strings.join('');
+  return strings.join('')
 }
