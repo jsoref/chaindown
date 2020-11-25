@@ -1,7 +1,7 @@
 {
   "name": "chaindown",
   "author": "Jason Kuhrt",
-  "version": "0.1.0",
+  "version": "0.1.0-next.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,7 +20,9 @@
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
-    "analyze": "size-limit --why"
+    "analyze": "size-limit --why",
+    "release:preview": "dripip preview",
+    "release:stable": "dripip stable"
   },
   "peerDependencies": {},
   "husky": {
