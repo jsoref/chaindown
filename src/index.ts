@@ -1,6 +1,85 @@
 import * as lo from 'lodash'
 import { ArrayOrVarg, MaybeArray } from './utils'
 
+const newLine = '\n'
+
+type Chaindown = {
+  heading(level: number, content: Node): Chaindown
+  // heading(level: number, content: Node | ((chaindown: InnerChaindown) => void)): Chaindown
+  list(items: Node[]): Chaindown
+  codeSpan(content: Node): Chaindown
+  render(state?: RenderState): string
+}
+
+// type InnerChaindown = {
+//   heading(level: number, content: Node | ((chaindown: InnerChaindown) => void)): InnerChaindown
+//   list(items: Node[]): InnerChaindown
+//   codeSpan(content: Node): InnerChaindown
+// }
+
+type PrivateChaindown = Chaindown & { private: { state: ChaindownState } }
+
+type ChaindownState = {
+  nodes: Node[]
+}
+
+export function create(): Chaindown {
+  const state: ChaindownState = {
+    nodes: []
+  }
+
+  const api: Chaindown = {
+    heading(level, content) {
+      let contentResult
+      // if (isFunction(content)) {
+      //   const innerChaindown = create() as PrivateChaindown
+      //   content(innerChaindown)
+      //   contentResult = span(innerChaindown.private.state.nodes)
+      // } else {
+      contentResult = content
+      // }
+      state.nodes.push(heading(level, contentResult))
+      return api
+    },
+    list(items) {
+      state.nodes.push(list(items))
+      return api
+    },
+    codeSpan(content) {
+      state.nodes.push(codeSpan(content))
+      return api
+    },
+    render(renderState?: RenderState) {
+      const defaultState = {
+        level: 0
+      }
+      const renderState_ = renderState ?? defaultState
+      const result =
+        state.nodes
+          .map(n => render(renderState_, n))
+          .join(newLine)
+          .trim() + newLine
+      return result
+    }
+  }
+
+  const privateAPI = api as PrivateChaindown
+
+  privateAPI.private = {
+    state
+  }
+
+  return api
+}
+
+export function list(nodes: Node[]): Node {
+  return {
+    render(state) {
+      return nodes.map(n => `- ${render(state, n)}`).join('\n')
+    }
+  }
+}
+
 /**
  * Create a markdown section. A section is a title following by content.
  */
@@ -19,7 +98,7 @@ export function section(title: Node): SmartNode {
         state,
         lines(
           render(state, heading(state.level, data.title)),
-          ...lo.flatMap(data.nodes, content => renderN({ ...state, level: state.level + 1 }, content))
+          ...lo.flatMap(data.nodes, content => renderTree({ ...state, level: state.level + 1 }, content))
         )
       )
     }
@@ -73,7 +152,7 @@ export function heading(n: number, content: Node): Renderable {
     i++
   }
 
-  return span(s, content)
+  return lines('', span(s, content), '')
 }
 
 /**
@@ -90,7 +169,7 @@ export function lines(...nodes: ArrayOrVarg<Node>): SmartNode {
       return me
     },
     render(state) {
-      return lo.flatMap(data.nodes, n => renderN(state, n)).join('\n')
+      return lo.flatMap(data.nodes, n => renderTree(state, n)).join('\n')
     }
   }
 
@@ -111,7 +190,7 @@ export function span(...nodes: ArrayOrVarg<Node>): SmartNode {
       return me
     },
     render(state) {
-      return lo.flatMap(data.nodes, n => renderN(state, n)).join(' ')
+      return lo.flatMap(data.nodes, n => renderTree(state, n)).join(' ')
     }
   }
 
@@ -127,12 +206,12 @@ export const PRETTIER_IGNORE = '<!-- prettier-ignore -->'
 // Internal Utilities
 //
 
-function renderN(state: RenderState, r: Node): MaybeArray<string> {
-  return typeof r === 'string' ? r : r.render(state)
+export function render(state: RenderState, n: Node): string {
+  return lo.flatten(renderTree(state, n)).join('')
 }
 
-export function render(state: RenderState, n: Node): string {
-  return lo.flatten(renderN(state, n)).join('')
+function renderTree(state: RenderState, n: Node): MaybeArray<string> {
+  return typeof n === 'string' ? n : n.render(state)
 }
 
 interface RenderState {
